@@ -7,7 +7,6 @@ import pickle
 import requests
 from bs4 import BeautifulSoup
 from slackclient import SlackClient
-from twilio.rest import Client as TwilioClient
 
 from requests.packages.urllib3.exceptions import InsecureRequestWarning
 requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
@@ -15,10 +14,6 @@ requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 # XXX private info
 user_login_value = 'YOUR_INTRA_NAME_HERE'                       # XXX
 user_password_value = 'YOUR_INTRA_PASSWORD_HERE'                # XXX
-twilio_account_sid = 'ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'       # XXX
-twilio_auth_token = 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'          # XXX
-twilio_from_number = '+1xxxxxxxxxx'                             # XXX
-twilio_to_number = '+1xxxxxxxxxx'                               # XXX
 slack_token = 'xoxs-xxxxxxxxxxx-xxxxxxxxxxxx-xxxxxxxxxxxx-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'
 
 # settings
@@ -26,7 +21,6 @@ sign_out = False            # if set to True, bot will log out of intra, generat
 save_session = True
 save_html = True
 debug = True
-send_sms = True
 send_group_msg = True
 send_direct_msg = True
 send_direct_msg_if = False   # send direct message only if group message fails
@@ -47,9 +41,10 @@ intra_profile_page_title = 'Intra Profile Home'
 # this way we can re-use it next time (to prevent multiple logins and email notifications)
 intra_session_file = 'intra_session.pickled'
 
-# http user agent, you'll be able to see this on your intra page,
+# http user agent, you'll be able to see this on your intra page, change XXXXX with your campus if you want
 # check your connection logs at    https://profile.intra.42.fr/users/YOUR_INTRA_NAME_HERE/user_logins
-user_agent = 'Mozilla/5.0 (Nintendo Banana; U; Windows Like Godzilla; en) Version/0.42.US'
+# user_agent = 'Mozilla/5.0 (Campus; XXXXX; 42Correction-Bot) Gecko/20100101 Firefox/71.0'
+user_agent = 'Mozilla/5.0 (Campus; 42; 42Correction-Bot) Gecko/20100101 Firefox/71.0'
 
 # http headers dict to send
 headers = {'User-Agent': user_agent}
@@ -57,12 +52,6 @@ headers = {'User-Agent': user_agent}
 # a place to store our correction string, this way we can avoid sending duplicates
 log_file = 'corrections.log'
 slack_user_list_file = 'slack.user.list'
-
-
-###############################################################################
-def twilio_sms(message):
-    tc = TwilioClient(twilio_account_sid, twilio_auth_token)
-    a = tc.messages.create(to=twilio_to_number, from_=twilio_from_number, body=message)
 
 ###############################################################################
 def slack_update_user_list():
@@ -224,8 +213,6 @@ def create_session():   # creates a session, logs in, saves session to a file
             print('[debug] failed to post login data, requests.post returned: ', req2.status_code)
         return False
 
-###############################################################################
-###############################################################################
 # [ main logic here] ##########################################################
 
 if is_online() != True:
@@ -279,7 +266,6 @@ for reminder in soup2.find_all('div', class_='project-item reminder'):
 
         if is_text_in_file(log_file, message) == False:
             put_text_in_file(log_file, message)                         #save in log file
-            if send_sms == True: twilio_sms(message)                                         #send sms
 
             user_login_value = user_login_value.lower()
             if partner != None:
